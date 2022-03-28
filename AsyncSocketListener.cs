@@ -4,13 +4,19 @@ using System.Text;
 
 public class AsyncSocketListener
 {
-    public static ManualResetEvent done = new ManualResetEvent(false);
+    public ManualResetEvent done = new ManualResetEvent(false);
+    private Config _config;
 
-    public static void Start(Config config)
+    public AsyncSocketListener(Config config)
+    {
+        _config = config;
+    }
+
+    public void Start()
     {
         IPHostEntry ipHostInfo = Dns.GetHostEntry(Dns.GetHostName());
         IPAddress ipAddress = ipHostInfo.AddressList[0];
-        var localEndpoint = new IPEndPoint(ipAddress, 6660);
+        var localEndpoint = new IPEndPoint(ipAddress, _config.Port);
         var socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
         try
@@ -32,7 +38,7 @@ public class AsyncSocketListener
         }
     }
 
-    public static void AcceptCallback(IAsyncResult result)
+    public void AcceptCallback(IAsyncResult result)
     {
         // Signal the main thread to continue
         done.Set();
@@ -46,7 +52,7 @@ public class AsyncSocketListener
             state.Buffer, 0, SocketState.BufferSize, SocketFlags.None, new AsyncCallback(ReadCallback), state);
     }
 
-    public static void ReadCallback(IAsyncResult result)
+    public void ReadCallback(IAsyncResult result)
     {
         var sendContent = String.Empty;
 
@@ -59,20 +65,20 @@ public class AsyncSocketListener
         {
             state.ReceivedText.Append(Encoding.ASCII.GetString(state.Buffer, 0, bytesRead));
 
-            var requestHandler = new RequestHandler(Log, state.ReceivedText.ToString());
+            var requestHandler = new RequestHandler(Log, state.ReceivedText.ToString(), _config);
 
             sendContent += requestHandler.GetResponse();
             Send(handler, sendContent);
         }
     }
 
-    public static void Send(Socket handler, string content)
+    public void Send(Socket handler, string content)
     {
         byte[] sendBytes = Encoding.ASCII.GetBytes(content);
         handler.BeginSend(sendBytes, 0, sendBytes.Length, 0, new AsyncCallback(SendCallback), handler);
     }
 
-    public static void SendCallback(IAsyncResult result)
+    public void SendCallback(IAsyncResult result)
     {
         try
         {

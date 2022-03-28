@@ -1,10 +1,34 @@
 ﻿using System.CommandLine.DragonFruit;
+using Newtonsoft.Json;
 
-public struct Config
+public class Config
 {
-    public string Port;
-    public string SiteRoot;
-    public string DefaultPage;
+    public const string ContentDirectory = "content";
+    public const string TemplateDirectory = "template";
+    public int Port { get; set; }
+    public DirectoryInfo? SiteRoot { get; set; }
+    public string DefaultPage { get; set; }
+    public bool TemplateEngineEnabled { get; set; }
+
+    public DirectoryInfo GetContentDirectory()
+    {
+        var directory = new DirectoryInfo(SiteRoot.FullName + Path.DirectorySeparatorChar + ContentDirectory);
+        if (!directory.Exists)
+        {
+            Console.WriteLine("Warning: Content directory does not exist.");
+        }
+        return directory;
+    }
+
+    public DirectoryInfo GetTemplateDirectory()
+    {
+        var directory = new DirectoryInfo(SiteRoot.FullName + Path.DirectorySeparatorChar + TemplateDirectory);
+        if (!directory.Exists)
+        {
+            Console.WriteLine("Warning: Template directory does not exist.");
+        }
+        return directory;
+    }
 }
 
 class Program
@@ -18,12 +42,49 @@ class Program
             Environment.Exit(1);
         }
 
-        AsyncSocketListener.Start(GetConfig(configFile));
+        var listener = new AsyncSocketListener(GetConfig(configFile));
+        listener.Start();
     }
 
-    static Config GetConfig(FileInfo fileInfo)
+    static Config GetConfig(FileInfo configFile)
     {
-        var config = new Config();
+        if (!configFile.Exists)
+        {
+            Console.WriteLine("Server configuration file does not exist.");
+            Environment.Exit(1);
+        }
+
+        JsonConverter[] converters = new JsonConverter[]
+        {
+            new FileInfoConverter(),
+            new DirectoryInfoConverter()
+        };
+        Config config = JsonConvert.DeserializeObject<Config>(configFile.OpenText().ReadToEnd(), converters);
+        
+        // If port is not in file it will set this to 0
+        if(config.Port == 0)
+        {
+            Console.WriteLine("Config error: Missing key 'port' or invalid value.");
+            Environment.Exit(1);
+        }
+
+        if(config.SiteRoot == null)
+        {
+            Console.WriteLine("Config error: Missing key 'siteRoot'.");
+            Environment.Exit(1);
+        }
+        if(!config.SiteRoot.Exists)
+        {
+            Console.WriteLine("Config error: Directory specified by 'siteRoot' does not exist.");
+            Environment.Exit(1);
+        }
+
+        if(config.DefaultPage == null)
+        {
+            Console.WriteLine("Config error: Missing key 'DefaultPage'.");
+            Environment.Exit(1);
+        }
+
         return config;
     }
 }
