@@ -23,10 +23,10 @@ public class Config {
     }
 
     public DirectoryInfo GetErrorTemplateDirectory() {
-        return GetDirectory(ErrorTemplateDirectory, "Notice: Error template directory does not exist.");
+        return GetDirectory(ErrorTemplateDirectory);
     }
 
-    private DirectoryInfo GetDirectory(string findDirectory, string? warning) {
+    private DirectoryInfo GetDirectory(string findDirectory, string? warning = null) {
         var directory = new DirectoryInfo(SiteRoot!.FullName + Path.DirectorySeparatorChar + findDirectory);
         if(!directory.Exists) {
             Console.WriteLine(warning);
