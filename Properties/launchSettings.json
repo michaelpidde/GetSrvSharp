@@ -2,7 +2,7 @@
   "profiles": {
     "GetSrvSharp": {
       "commandName": "Project",
-      "commandLineArgs": "--config-file C:\\Users\\micha\\Documents\\static_site\\srv.json"
+      "commandLineArgs": "--config-file D:\\static_site\\srv.json"
     }
   }
 }

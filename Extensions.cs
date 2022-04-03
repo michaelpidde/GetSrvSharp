@@ -1,9 +1,6 @@
-﻿public static class ResourceTypeExtensions
-{
-    public static string ToHeaderString(this RequestHandler.ResourceType type)
-    {
-        switch(type)
-        {
+﻿public static class ResourceTypeExtensions {
+    public static string ToHeaderString(this RequestHandler.ResourceType type) {
+        switch(type) {
             case RequestHandler.ResourceType.CSS:
                 return "text/css";
             case RequestHandler.ResourceType.PNG:
@@ -17,12 +14,9 @@
     }
 }
 
-public static class ResponseCodeExtensions
-{
-    public static string ToHeaderString(this RequestHandler.ResponseCode code)
-    {
-        switch(code)
-        {
+public static class ResponseCodeExtensions {
+    public static string ToHeaderString(this RequestHandler.ResponseCode code) {
+        switch(code) {
             case RequestHandler.ResponseCode.OK:
                 return "OK";
             case RequestHandler.ResponseCode.NOT_FOUND:
