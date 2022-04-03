@@ -19,14 +19,14 @@ public class Config {
     }
 
     public DirectoryInfo GetTemplateDirectory() {
-        return GetDirectory(TemplateDirectory, "Warning: Template directory does not exist.");
+        return GetDirectory(TemplateDirectory, TemplateEngineEnabled ? "Warning: Template directory does not exist." : null);
     }
 
     public DirectoryInfo GetErrorTemplateDirectory() {
         return GetDirectory(ErrorTemplateDirectory, "Notice: Error template directory does not exist.");
     }
 
-    private DirectoryInfo GetDirectory(string findDirectory, string warning) {
+    private DirectoryInfo GetDirectory(string findDirectory, string? warning) {
         var directory = new DirectoryInfo(SiteRoot!.FullName + Path.DirectorySeparatorChar + findDirectory);
         if(!directory.Exists) {
             Console.WriteLine(warning);
