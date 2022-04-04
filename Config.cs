@@ -1,5 +1,29 @@
 ﻿using Newtonsoft.Json;
 
+public class DirectoryInfoConverter : JsonConverter<DirectoryInfo> {
+    public override DirectoryInfo? ReadJson(JsonReader reader, Type objectType, DirectoryInfo? existingValue, bool hasExistingValue, JsonSerializer serializer) {
+        try {
+            return new DirectoryInfo((string)reader.Value);
+        } catch {
+            return null;
+        }
+    }
+
+    public override void WriteJson(JsonWriter writer, DirectoryInfo? value, JsonSerializer serializer) { }
+}
+
+public class FileInfoConverter : JsonConverter<FileInfo> {
+    public override FileInfo? ReadJson(JsonReader reader, Type objectType, FileInfo? existingValue, bool hasExistingValue, JsonSerializer serializer) {
+        try {
+            return new FileInfo((string)reader.Value);
+        } catch {
+            return null;
+        }
+    }
+
+    public override void WriteJson(JsonWriter writer, FileInfo? value, JsonSerializer serializer) { }
+}
+
 public class Config {
     public const string ContentDirectory = "content";
     public const string TemplateDirectory = "template";
@@ -49,10 +73,12 @@ public class Config {
             new FileInfoConverter(),
             new DirectoryInfoConverter()
         };
-        Config? config = JsonConvert.DeserializeObject<Config>(configFile.OpenText().ReadToEnd(), converters);
 
-        if(config == null) {
-            Error("Cannot parse config file");
+        Config? config = null;
+        try {
+            config = JsonConvert.DeserializeObject<Config>(configFile.OpenText().ReadToEnd(), converters);
+        } catch(Exception e) {
+            Error($"Cannot parse config file: {e.Message}");
         }
 
         if(config!.Host == null) {
@@ -65,18 +91,18 @@ public class Config {
         }
 
         if(config.SiteRoot == null) {
-            Error("Missing key 'siteRoot'");
+            Error("Missing key 'siteRoot' or invalid value");
         }
         if(!config.SiteRoot!.Exists) {
             Error("Directory specified by 'siteRoot' does not exist");
         }
 
         if(config.DefaultPage == null) {
-            Error("Missing key 'defaultPage'");
+            Error("Missing key 'defaultPage' or invalid value");
         }
 
         if(config.LogFile == null) {
-            Error("Config error: Missing key 'logFile'");
+            Error("Config error: Missing key 'logFile' or invalid value");
         }
         if(!config.LogFile!.Exists) {
             Error("Config error: Log file does not exist");

@@ -17,11 +17,36 @@ public class RequestHandler {
     public enum ResourceType {
         HTML, CSS, PNG, JPG
     }
+    public static string ResourceTypeToString(ResourceType value) {
+        switch(value) {
+            case ResourceType.CSS:
+                return "text/css";
+            case ResourceType.PNG:
+                return "image/png";
+            case ResourceType.JPG:
+                return "image/jpg";
+            case ResourceType.HTML:
+            default:
+                return "text/html";
+        }
+    }
 
     public enum ResponseCode {
         OK = 200,
         NOT_FOUND = 404,
         SERVER_ERROR = 500
+    }
+    public static string ResponseCodeToString(ResponseCode value) {
+        switch(value) {
+            case ResponseCode.OK:
+                return "OK";
+            case ResponseCode.NOT_FOUND:
+                return "Not Found";
+            case ResponseCode.SERVER_ERROR:
+                return "Server Error";
+            default:
+                return "Great Scott!";
+        }
     }
 
     public RequestHandler(Action<string> log, string rawRequest, Config config) {
@@ -95,9 +120,9 @@ public class RequestHandler {
 
     private string GetHeaders(int contentLength) {
         var sb = new StringBuilder();
-        sb.AppendLine("HTTP/1.1 " + (int)_responseCode + " " + _responseCode.ToHeaderString());
+        sb.AppendLine("HTTP/1.1 " + (int)_responseCode + " " + ResponseCodeToString(_responseCode));
         sb.AppendLine("Content-Length: " + contentLength.ToString());
-        sb.AppendLine("Content-Type: " + _resourceType.ToHeaderString());
+        sb.AppendLine("Content-Type: " + ResourceTypeToString(_resourceType));
         sb.Append('\n');
         return sb.ToString();
     }
