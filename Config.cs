@@ -9,7 +9,7 @@ public class DirectoryInfoConverter : JsonConverter<DirectoryInfo> {
         JsonSerializer serializer
     ) {
         try {
-            return new DirectoryInfo((string)reader.Value);
+            return new DirectoryInfo(reader.Value as string ?? "");
         } catch {
             return null;
         }
@@ -27,7 +27,7 @@ public class FileInfoConverter : JsonConverter<FileInfo> {
         JsonSerializer serializer
     ) {
         try {
-            return new FileInfo((string)reader.Value);
+            return new FileInfo(reader.Value as string ?? "");
         } catch {
             return null;
         }
@@ -47,10 +47,13 @@ public class Config {
     public bool TemplateEngineEnabled { get; set; }
     public FileInfo LogFile { get; set; }
 
-    // This gets created via json deserialization by passing a file into Get. Do not allow direct instantiation
-    protected Config() { }
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    protected Config() {
+        // This gets created via json deserialization by passing a file into Get. Do not allow direct instantiation
+    }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-    public DirectoryInfo GetContentDirectory() =>
+        public DirectoryInfo GetContentDirectory() =>
         GetDirectory(ContentDirectory, "Warning: Content directory does not exist.");
 
     public DirectoryInfo GetTemplateDirectory() =>

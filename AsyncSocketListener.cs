@@ -26,6 +26,11 @@ public class AsyncSocketListener {
         _config = config;
     }
 
+    public void Abort(string reason) {
+        Log($"Aborting: {reason}");
+        Environment.Exit(1);
+    }
+
     public void Start() {
         IPHostEntry? ipHostInfo = null;
         try {
@@ -60,7 +65,10 @@ public class AsyncSocketListener {
         done.Set();
 
         var socket = result.AsyncState as Socket;
-        Socket handler = socket.EndAccept(result);
+        if(socket == null) {
+            Abort("Socket is null.");
+        }
+        Socket handler = socket!.EndAccept(result);
 
         var state = new SocketState();
         state.WorkSocket = handler;
@@ -73,9 +81,15 @@ public class AsyncSocketListener {
 
         // Get state object and handler socket from the async state object
         var state = result.AsyncState as SocketState;
-        Socket handler = state.WorkSocket;
+        if(state == null) {
+            Abort("SocketState is null.");
+        }
+        Socket? handler = state!.WorkSocket;
 
-        int bytesRead = handler.EndReceive(result);
+        if(handler == null) {
+            Abort("WorkSocket is null.");
+        }
+        int bytesRead = handler!.EndReceive(result);
         if(bytesRead > 0) {
             state.ReceivedText.Append(Encoding.ASCII.GetString(state.Buffer, 0, bytesRead));
 
@@ -94,7 +108,10 @@ public class AsyncSocketListener {
     public void SendCallback(IAsyncResult result) {
         try {
             var handler = result.AsyncState as Socket;
-            int bytesSent = handler.EndSend(result);
+            if(handler == null) {
+                Abort("Socket is null.");
+            }
+            int bytesSent = handler!.EndSend(result);
             handler.Shutdown(SocketShutdown.Both);
             handler.Close();
         } catch(Exception e) {
