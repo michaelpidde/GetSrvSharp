@@ -1,7 +1,13 @@
 ﻿using Newtonsoft.Json;
 
 public class DirectoryInfoConverter : JsonConverter<DirectoryInfo> {
-    public override DirectoryInfo? ReadJson(JsonReader reader, Type objectType, DirectoryInfo? existingValue, bool hasExistingValue, JsonSerializer serializer) {
+    public override DirectoryInfo? ReadJson(
+        JsonReader reader,
+        Type objectType,
+        DirectoryInfo? existingValue,
+        bool hasExistingValue,
+        JsonSerializer serializer
+    ) {
         try {
             return new DirectoryInfo((string)reader.Value);
         } catch {
@@ -13,7 +19,13 @@ public class DirectoryInfoConverter : JsonConverter<DirectoryInfo> {
 }
 
 public class FileInfoConverter : JsonConverter<FileInfo> {
-    public override FileInfo? ReadJson(JsonReader reader, Type objectType, FileInfo? existingValue, bool hasExistingValue, JsonSerializer serializer) {
+    public override FileInfo? ReadJson(
+        JsonReader reader,
+        Type objectType,
+        FileInfo? existingValue,
+        bool hasExistingValue,
+        JsonSerializer serializer
+    ) {
         try {
             return new FileInfo((string)reader.Value);
         } catch {
