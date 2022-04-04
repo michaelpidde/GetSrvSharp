@@ -136,23 +136,20 @@ public class RequestHandler {
         FileInfo errorFile = new(
             _config.GetErrorTemplateDirectory().FullName + Path.DirectorySeparatorChar + (int)_responseCode + ".htm");
 
-        if(errorFile.Exists) {
+        if(errorFile.Exists)
             // TODO: Allow template engine to parse this
             return errorFile.OpenText().ReadToEnd();
-        }
 
         string? template;
-        if(_errorTemplates.TryGetValue((int)_responseCode, out template)) {
+        if(_errorTemplates.TryGetValue((int)_responseCode, out template))
             return template;
-        }
 
         return "";
     }
 
     public string GetBody() {
-        if(_resource == "") {
+        if(_resource == "")
             _resource = _config.DefaultPage;
-        }
 
         FileInfo requestedFile = new(
             _config.GetContentDirectory().FullName + Path.DirectorySeparatorChar + _resource);
@@ -178,9 +175,8 @@ public class RequestHandler {
     }
 
     public string ParseTemplate(string content) {
-        if(!_config.GetTemplateDirectory().Exists) {
+        if(!_config.GetTemplateDirectory().Exists)
             return content;
-        }
 
         string title = "";
         const string titleTagToken = "@title ";
@@ -195,24 +191,21 @@ public class RequestHandler {
         if(content.Contains(headerToken)) {
             FileInfo headerFile = new FileInfo(
                 _config.GetTemplateDirectory().FullName + Path.DirectorySeparatorChar + "header.htm");
-            if(headerFile.Exists) {
+            if(headerFile.Exists)
                 content = content.Replace(headerToken, headerFile.OpenText().ReadToEnd());
-            }
         }
 
         const string footerToken = "|footer|";
         if(content.Contains(footerToken)) {
             FileInfo footerFile = new FileInfo(
                 _config.GetTemplateDirectory().FullName + Path.DirectorySeparatorChar + "footer.htm");
-            if(footerFile.Exists) {
+            if(footerFile.Exists)
                 content = content.Replace(footerToken, footerFile.OpenText().ReadToEnd());
-            }
         }
 
         const string titleToken = "|title|";
-        if(content.Contains(titleToken)) {
+        if(content.Contains(titleToken))
             content = content.Replace(titleToken, title);
-        }
 
         return content;
     }
