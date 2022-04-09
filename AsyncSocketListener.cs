@@ -120,7 +120,11 @@ public class AsyncSocketListener {
     }
 
     public void Log(string message) {
-        using StreamWriter file = new(_config.LogFile.FullName, append: true);
-        file.WriteLineAsync(message);
+        try {
+            using StreamWriter file = new(_config.LogFile.FullName, append: true);
+            file.WriteLineAsync(message);
+        } catch(Exception e) {
+            Console.WriteLine(e.Message);
+        }
     }
 }

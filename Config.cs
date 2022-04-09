@@ -63,8 +63,9 @@ public class Config {
 
     private DirectoryInfo GetDirectory(string findDirectory, string? warning = null) {
         var directory = new DirectoryInfo(SiteRoot!.FullName + Path.DirectorySeparatorChar + findDirectory);
-        if(!directory.Exists)
+        if(!directory.Exists) {
             Console.WriteLine(warning);
+        }
         return directory;
     }
 
@@ -74,8 +75,9 @@ public class Config {
             Environment.Exit(1);
         }
 
-        if(!configFile.Exists)
+        if(!configFile.Exists) {
             Error("Server configuration file does not exist");
+        }
 
         JsonConverter[] converters = new JsonConverter[]
         {
@@ -90,25 +92,32 @@ public class Config {
             Error($"Cannot parse config file: {e.Message}");
         }
 
-        if(config!.Host == null)
+        if(config!.Host == null) {
             Error("Config error: Missing key 'host'");
+        }
 
         // If port is not in file it will set this to 0
-        if(config.Port == 0)
+        if(config.Port == 0) {
             Error("Missing key 'port' or invalid value");
+        }
 
-        if(config.SiteRoot == null)
+        if(config.SiteRoot == null) {
             Error("Missing key 'siteRoot' or invalid value");
-        if(!config.SiteRoot!.Exists)
+        }
+        if(!config.SiteRoot!.Exists) {
             Error("Directory specified by 'siteRoot' does not exist");
+        }
 
-        if(config.DefaultPage == null)
+        if(config.DefaultPage == null) {
             Error("Missing key 'defaultPage' or invalid value");
+        }
 
-        if(config.LogFile == null)
+        if(config.LogFile == null) {
             Error("Config error: Missing key 'logFile' or invalid value");
-        if(!config.LogFile!.Exists)
+        }
+        if(!config.LogFile!.Exists) {
             Error("Config error: Log file does not exist");
+        }
 
         return config;
     }

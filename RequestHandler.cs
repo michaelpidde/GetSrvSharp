@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 
 public class RequestHandler {
     private string _rawRequest;
@@ -86,7 +87,6 @@ public class RequestHandler {
             return;
         }
 
-
         if(_resource.Length == 0) {
             _resourceType = ResourceType.HTML;
             return;
@@ -120,9 +120,10 @@ public class RequestHandler {
 
     private string GetHeaders(int contentLength) {
         var sb = new StringBuilder();
-        sb.AppendLine("HTTP/1.1 " + (int)_responseCode + " " + ResponseCodeToString(_responseCode));
-        sb.AppendLine("Content-Length: " + contentLength.ToString());
-        sb.AppendLine("Content-Type: " + ResourceTypeToString(_resourceType));
+        sb.AppendLine($"HTTP/1.1 {(int)_responseCode} {ResponseCodeToString(_responseCode)}");
+        sb.AppendLine($"Content-Length: {contentLength.ToString()}");
+        sb.AppendLine($"Content-Type: {ResourceTypeToString(_resourceType)}");
+        sb.AppendLine($"Cache-Control: max-age={1 * 60 * 60 * 24 * 365}");
         sb.Append('\n');
         return sb.ToString();
     }
@@ -136,20 +137,23 @@ public class RequestHandler {
         FileInfo errorFile = new(
             _config.GetErrorTemplateDirectory().FullName + Path.DirectorySeparatorChar + (int)_responseCode + ".htm");
 
-        if(errorFile.Exists)
+        if(errorFile.Exists) {
             // TODO: Allow template engine to parse this
             return errorFile.OpenText().ReadToEnd();
+        }
 
         string? template;
-        if(_errorTemplates.TryGetValue((int)_responseCode, out template))
+        if(_errorTemplates.TryGetValue((int)_responseCode, out template)) {
             return template;
+        }
 
         return "";
     }
 
     public string GetBody() {
-        if(_resource == "")
+        if(_resource == "") {
             _resource = _config.DefaultPage;
+        }
 
         FileInfo requestedFile = new(
             _config.GetContentDirectory().FullName + Path.DirectorySeparatorChar + _resource);
@@ -162,7 +166,7 @@ public class RequestHandler {
 
         string content = requestedFile.OpenText().ReadToEnd();
 
-        if(!_config.TemplateEngineEnabled) {
+        if(!_config.TemplateEngineEnabled || !_config.GetTemplateDirectory().Exists) {
             _responseCode = ResponseCode.OK;
             return content;
         }
@@ -171,42 +175,7 @@ public class RequestHandler {
         // even if the template parsing fails. That should gracefully fail and return
         // the unparsed content if so.
         _responseCode = ResponseCode.OK;
-        return ParseTemplate(content);
-    }
-
-    public string ParseTemplate(string content) {
-        if(!_config.GetTemplateDirectory().Exists)
-            return content;
-
-        string title = "";
-        const string titleTagToken = "@title ";
-
-        if(content.StartsWith(titleTagToken)) {
-            int lineEnd = content.IndexOf(Environment.NewLine);
-            title = content.Substring(titleTagToken.Length, lineEnd - titleTagToken.Length);
-            content = content.Remove(0, lineEnd + Environment.NewLine.Length);
-        }
-
-        const string headerToken = "|header|";
-        if(content.Contains(headerToken)) {
-            FileInfo headerFile = new FileInfo(
-                _config.GetTemplateDirectory().FullName + Path.DirectorySeparatorChar + "header.htm");
-            if(headerFile.Exists)
-                content = content.Replace(headerToken, headerFile.OpenText().ReadToEnd());
-        }
-
-        const string footerToken = "|footer|";
-        if(content.Contains(footerToken)) {
-            FileInfo footerFile = new FileInfo(
-                _config.GetTemplateDirectory().FullName + Path.DirectorySeparatorChar + "footer.htm");
-            if(footerFile.Exists)
-                content = content.Replace(footerToken, footerFile.OpenText().ReadToEnd());
-        }
-
-        const string titleToken = "|title|";
-        if(content.Contains(titleToken))
-            content = content.Replace(titleToken, title);
-
-        return content;
+        var parser = new TemplateParser();
+        return parser.Parse(_config.GetTemplateDirectory().FullName, content);
     }
 }
