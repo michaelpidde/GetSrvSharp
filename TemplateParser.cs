@@ -7,6 +7,7 @@ public class TemplateParser
     private const string _delim = "``";
     private const char _openBrace = '(';
     private const char _closeBrace = ')';
+    private const string _whitespace = @"[ \t]";
     
     public string Parse(string templateDirectory, string content) {
         if(!content.Contains(_delim)) {
@@ -15,7 +16,7 @@ public class TemplateParser
 
         content = ParseIncludes(templateDirectory, content);
 
-        var match = Regex.Match(content, $"{_delim}.+{_delim}", RegexOptions.Multiline);
+        var match = Regex.Match(content, @$"{_delim}{_whitespace}*.+\{_openBrace}.+\{_closeBrace}{_delim}", RegexOptions.Multiline);
 
         if(!match.Success) {
             return content;
@@ -26,10 +27,6 @@ public class TemplateParser
 
             var rawMatch = match.Value.ToString();
             string block = rawMatch.Replace(_delim, "").Trim();
-            if(block.Length == 0) {
-                Next();
-                continue;
-            }
 
             if(block.StartsWith('@')) {
                 content = ParseVariable(content, rawMatch, block);
@@ -50,54 +47,31 @@ public class TemplateParser
     }
 
     private string ParseOut(string content, string rawMatch, string block) {
-        if(!block.Contains(_openBrace) || !block.Contains(_closeBrace)) {
-            return content;
-        }
-        block = block.Remove(0, "out(".Length);
-        int closeBracePosition = block.IndexOf(_closeBrace);
-        if(closeBracePosition == 0) {
-            return content;
-        }
-        string varName = block[0..closeBracePosition];
-        if(!_templateVars.ContainsKey(varName)) {
-            _warnings.Add($"Unexpected variable '{varName}'.");
+        block = block.Remove(0, $"out{_openBrace}".Length);
+        block = block.Remove(block.Length - 1, 1);
+        if(!_templateVars.ContainsKey(block)) {
+            _warnings.Add($"Unexpected variable '{block}'.");
             return content;
         }
 
-        string extraCruft = block[closeBracePosition..(block.Length - 1)];
-        if(extraCruft.Length > 0) {
-            _warnings.Add($"Unexpected end of line content '{extraCruft}'.");
-        }
-
-        return content.Replace(rawMatch, _templateVars[varName] + extraCruft);
+        return content.Replace(rawMatch, _templateVars[block]);
     }
 
     private string ParseVariable(string content, string rawMatch, string block) {
-        if(!block.Contains(_openBrace) || !block.Contains(_closeBrace)) {
-            return content;
-        }
         block = block.Remove(0, 1);
         int openBracePosition = block.IndexOf(_openBrace);
-        if(openBracePosition == 0) {
-            return content;
-        }
         string varName = block[0..openBracePosition];
         int closeBracePosition = block.IndexOf(_closeBrace);
         string varValue = block[(openBracePosition + 1)..closeBracePosition];
         _templateVars.Add(varName, varValue);
 
-        string extraCruft = block[closeBracePosition..(block.Length - 1)];
-        if(extraCruft.Length > 0) {
-            _warnings.Add($"Unexpected end of line content '{extraCruft}'.");
-        }
-
-        return content.Replace(rawMatch, extraCruft);
+        return content.Replace(rawMatch, "");
     }
 
     private string ParseIncludes(string templateDirectory, string content) {
         const string token = "include";
 
-        Match match = Regex.Match(content, $"{_delim}{token}\\{_openBrace}.+{_delim}", RegexOptions.Multiline);
+        Match match = Regex.Match(content, @$"{_whitespace}*{_delim}{token}\{_openBrace}.+\{_closeBrace}{_delim}", RegexOptions.Multiline);
 
         if(!match.Success) {
             return content;
@@ -108,46 +82,20 @@ public class TemplateParser
 
             var rawMatch = match.Value.ToString();
             string block = rawMatch.Replace(_delim, "").Trim();
-            if(block.Length == 0) {
-                Next();
-                continue;
-            }
-
-            if(!block.StartsWith(token)) {
-                Next();
-                continue;
-            }
-
-            if(!block.Contains(_openBrace) || !block.Contains(_closeBrace)) {
-                Next();
-                continue;
-            }
             block = block.Remove(0, $"{token}{_openBrace}".Length);
-
-            int closeBracePosition = block.IndexOf(_closeBrace);
-            if(closeBracePosition == 0) {
-                Next();
-                continue;
-            }
-
-            string templateName = block[0..closeBracePosition];
+            block = block.Remove(block.Length - 1, 1);
 
             FileInfo templateFile = new FileInfo(
-                templateDirectory + Path.DirectorySeparatorChar + templateName + ".htm");
-
-            string extraCruft = block[closeBracePosition..(block.Length - 1)];
-            if(extraCruft.Length > 0) {
-                _warnings.Add($"Unexpected end of line content '{extraCruft}'.");
-            }
+                templateDirectory + Path.DirectorySeparatorChar + block + ".htm");
 
             if(!templateFile.Exists) {
                 _warnings.Add($"Cannot find requested include file '{templateFile.Name}'.");
-                content = content.Replace(rawMatch, "" + extraCruft);
+                content = content.Replace(rawMatch, "");
                 Next();
                 continue;
             }
 
-            content = content.Replace(rawMatch, templateFile.OpenText().ReadToEnd() + extraCruft);
+            content = content.Replace(rawMatch, templateFile.OpenText().ReadToEnd());
 
             Next();
         }
