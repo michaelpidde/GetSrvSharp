@@ -31,9 +31,12 @@ Current templating capabilities are limited and work via convention.
 
 The `templateEngineEnabled` configuration setting will control whether template parsing will occur.
 
+A templating directive is prefixed with two backticks ` `` ` and ends with the same. The engine currently supports only one directive inside a set of backticks - that is, you cannot do something like ` ``include(header) include(header2)`` `. Each include would need to be in its own set of backticks.
+
 There are two primary templating options that can be used:
-1. `@title` If this token is starts the first line in a content file, it will get stripped out and used in the title replacement tag. Example: `@title Page Title`
-1. `|token|` If a token is surrounded by pipes, it represents a replacement value. There are currently three supported replacement tokens:
-    1. `|title|` Replaced with value represented by `@title`
-    1. `|header|` Replaced with template/header.htm
-    1. `|footer|` Replaced with template/footer.htm
+1. Variables
+    1. A variable is defined with an `@` followed by the name of the variable and the value in parentheses. For example: ` ``@title(Site Title)`` `
+    1. The variable can then be used elsewhere via the `out` directive. ` ``out(title)`` ` would be used to output the title variable in the above example.
+1. Includes
+    1. The include directive is expectedly used to directly copy the content of a file into another. For example, ` ``include(header)`` ` would look in the `template` directory for a file named `header.htm` and replace the include directive with its content.
+    1. There are no protections against including the same file multiple times.

@@ -26,16 +26,16 @@ public class TemplateParser
             void Next() => match = match.NextMatch();
 
             var rawMatch = match.Value.ToString();
-            string block = rawMatch.Replace(_delim, "").Trim();
+            string block = RemoveDelim(rawMatch);
 
             if(block.StartsWith('@')) {
-                content = ParseVariable(content, rawMatch, block);
+                content = ParseVariable(content, rawMatch);
                 Next();
                 continue;
             }
 
             if(block.StartsWith("out")) {
-                content = ParseOut(content, rawMatch, block);
+                content = ParseOut(content, rawMatch);
                 Next();
                 continue;
             }
@@ -46,18 +46,24 @@ public class TemplateParser
         return content;
     }
 
-    private string ParseOut(string content, string rawMatch, string block) {
+    public static string RemoveDelim(string rawMatch) {
+        return rawMatch.Replace(_delim, "").Trim();
+    }
+
+    public string ParseOut(string content, string rawMatch) {
+        string block = RemoveDelim(rawMatch);
         block = block.Remove(0, $"out{_openBrace}".Length);
         block = block.Remove(block.Length - 1, 1);
         if(!_templateVars.ContainsKey(block)) {
-            _warnings.Add($"Unexpected variable '{block}'.");
+            _warnings.Add($"Undefined variable '{block}'.");
             return content;
         }
 
         return content.Replace(rawMatch, _templateVars[block]);
     }
 
-    private string ParseVariable(string content, string rawMatch, string block) {
+    public string ParseVariable(string content, string rawMatch) {
+        string block = RemoveDelim(rawMatch);
         block = block.Remove(0, 1);
         int openBracePosition = block.IndexOf(_openBrace);
         string varName = block[0..openBracePosition];

@@ -2,12 +2,15 @@
 using System.Text.RegularExpressions;
 
 public class RequestHandler {
+    public static readonly int OneYear = 1 * 60 * 60 * 24 * 365;
+
     private string _rawRequest;
     private Config _config;
     private string _resource = "";
     private const string _dateFormat = "yyyy-MM-dd HH:mm";
     private ResourceType _resourceType;
     private ResponseCode _responseCode = ResponseCode.NOT_FOUND;
+    
     private Action<string> Log { get; }
     private Dictionary<int, string> _errorTemplates = new Dictionary<int, string>
     {
@@ -93,21 +96,22 @@ public class RequestHandler {
         }
 
         int period = _resource.LastIndexOf(".") + 1;
-        switch(_resource.Substring(period, _resource.Length - period).ToLower()) {
+        _resourceType = GetResourceTypeFromExtension(_resource.Substring(period, _resource.Length - period));
+    }
+
+    public static ResourceType GetResourceTypeFromExtension(string extension) {
+        switch(extension.ToLower()) {
             case "css":
-                _resourceType = ResourceType.CSS;
-                break;
+                return ResourceType.CSS;
             case "png":
-                _resourceType = ResourceType.PNG;
-                break;
+                return ResourceType.PNG;
             case "jpg":
-                _resourceType = ResourceType.JPG;
-                break;
+            case "jpeg":
+                return ResourceType.JPG;
             case "html":
             case "htm":
             default:
-                _resourceType = ResourceType.HTML;
-                break;
+                return ResourceType.HTML;
         }
     }
 
@@ -115,15 +119,15 @@ public class RequestHandler {
         // Default response code to not found; it will get updated later on as necessary
         _responseCode = ResponseCode.NOT_FOUND;
         string body = GetBody();
-        return GetHeaders(body.Length) + body;
+        return GetHeaders(body.Length, _responseCode, _resourceType) + body;
     }
 
-    private string GetHeaders(int contentLength) {
+    public static string GetHeaders(int contentLength, ResponseCode responseCode, ResourceType resourceType) {
         var sb = new StringBuilder();
-        sb.AppendLine($"HTTP/1.1 {(int)_responseCode} {ResponseCodeToString(_responseCode)}");
+        sb.AppendLine($"HTTP/1.1 {(int)responseCode} {ResponseCodeToString(responseCode)}");
         sb.AppendLine($"Content-Length: {contentLength.ToString()}");
-        sb.AppendLine($"Content-Type: {ResourceTypeToString(_resourceType)}");
-        sb.AppendLine($"Cache-Control: max-age={1 * 60 * 60 * 24 * 365}");
+        sb.AppendLine($"Content-Type: {ResourceTypeToString(resourceType)}");
+        sb.AppendLine($"Cache-Control: max-age={OneYear}");
         sb.Append('\n');
         return sb.ToString();
     }
@@ -142,8 +146,7 @@ public class RequestHandler {
             return errorFile.OpenText().ReadToEnd();
         }
 
-        string? template;
-        if(_errorTemplates.TryGetValue((int)_responseCode, out template)) {
+        if(_errorTemplates.TryGetValue((int)_responseCode, out string? template)) {
             return template;
         }
 
