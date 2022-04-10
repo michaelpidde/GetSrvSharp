@@ -1,0 +1,12 @@
+﻿{
+  "profiles": {
+    "WorkerService": {
+      "commandName": "Project",
+      "commandLineArgs": "--config-file D:\\static_site\\srv.json",
+      "dotnetRunMessages": true,
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

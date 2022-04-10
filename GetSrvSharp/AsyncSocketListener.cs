@@ -21,6 +21,7 @@ public class SocketState {
 public class AsyncSocketListener {
     public ManualResetEvent done = new ManualResetEvent(false);
     private readonly Config _config;
+    private Socket _socket;
 
     public AsyncSocketListener(Config config) {
         _config = config;
@@ -42,19 +43,23 @@ public class AsyncSocketListener {
 
         IPAddress ipAddress = ipHostInfo!.AddressList[0];
         var localEndpoint = new IPEndPoint(ipAddress, _config.Port);
-        var socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+        _socket = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
         try {
-            socket.Bind(localEndpoint);
-            socket.Listen(100);
+            _socket.Bind(localEndpoint);
+            _socket.Listen(100);
             Console.WriteLine($"Server started at port {_config.Port}");
+        } catch(Exception e) {
+            Log(e.ToString());
+        }
+    }
 
-            while(true) {
-                done.Reset();
-                socket.BeginAccept(new AsyncCallback(AcceptCallback), socket);
-                // Block the current thread until a signal is received
-                done.WaitOne();
-            }
+    public void Listen() {
+        try {
+            done.Reset();
+            _socket.BeginAccept(new AsyncCallback(AcceptCallback), _socket);
+            // Block the current thread until a signal is received
+            done.WaitOne();
         } catch(Exception e) {
             Log(e.ToString());
         }
