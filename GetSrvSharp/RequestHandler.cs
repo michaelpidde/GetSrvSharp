@@ -143,7 +143,8 @@ public class RequestHandler {
 
         if(errorFile.Exists) {
             // TODO: Allow template engine to parse this
-            return errorFile.OpenText().ReadToEnd();
+            using var reader = errorFile.OpenText();
+            return reader.ReadToEnd();
         }
 
         if(_errorTemplates.TryGetValue((int)_responseCode, out string? template)) {
@@ -167,7 +168,8 @@ public class RequestHandler {
             return GetErrorPage();
         }
 
-        string content = requestedFile.OpenText().ReadToEnd();
+        using var reader = requestedFile.OpenText();
+        string content = reader.ReadToEnd();
 
         if(!_config.TemplateEngineEnabled || !_config.GetTemplateDirectory().Exists) {
             _responseCode = ResponseCode.OK;

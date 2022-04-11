@@ -101,7 +101,8 @@ public class TemplateParser
                 continue;
             }
 
-            content = content.Replace(rawMatch, templateFile.OpenText().ReadToEnd());
+            using var reader = templateFile.OpenText();
+            content = content.Replace(rawMatch, reader.ReadToEnd());
 
             Next();
         }

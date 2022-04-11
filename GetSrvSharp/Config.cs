@@ -87,7 +87,8 @@ public class Config {
 
         Config? config = null;
         try {
-            config = JsonConvert.DeserializeObject<Config>(configFile.OpenText().ReadToEnd(), converters);
+            using var reader = configFile.OpenText();
+            config = JsonConvert.DeserializeObject<Config>(reader.ReadToEnd(), converters);
         } catch(Exception e) {
             Error($"Cannot parse config file: {e.Message}");
         }
