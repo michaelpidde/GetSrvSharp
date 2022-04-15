@@ -3,7 +3,7 @@ Description=GetSrvSharp web server
 
 [Service]
 Type=notify
-ExecStart=/usr/share/dotnet6.0/dotnet /usr/etc/GetSrvSharp/WorkerService/bin/Debug/net6.0/WorkerService.dll --config-file /var/www/static_site/srv.json
+ExecStart=/usr/share/dotnet/dotnet /usr/etc/GetSrvSharp/WorkerService/bin/Debug/net6.0/WorkerService.dll --config-file /var/www/static_site/srv.json
 SyslogIdentifier=GetSrvSharp
 User=root
 Restart=always

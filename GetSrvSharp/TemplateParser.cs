@@ -99,7 +99,7 @@ public class TemplateParser {
       block = block.Remove(block.Length - 1, 1);
 
       FileInfo templateFile = new FileInfo(
-          templateDirectory + Path.DirectorySeparatorChar + block + ".htm");
+        templateDirectory + Path.DirectorySeparatorChar + block + ".htm");
 
       if(!templateFile.Exists) {
         _warnings.Add($"Cannot find requested include file '{templateFile.Name}'.");

@@ -169,7 +169,7 @@ public class RequestHandler {
     }
 
     FileInfo requestedFile = new(
-        _config.GetContentDirectory().FullName + Path.DirectorySeparatorChar + _resource);
+      _config.GetContentDirectory().FullName + Path.DirectorySeparatorChar + _resource);
 
     if(!requestedFile.Exists) {
       Log("Request resource " + _resource + " was not found.");
